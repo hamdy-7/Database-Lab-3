@@ -1,0 +1,45 @@
+==================================================
+Lab 3 - Problem 1 Answers
+==================================================
+
+Q1.1 Insert a row in the DEPARTMENT table that references a row in the EMPLOYEE table. Then try to delete the referenced row. What will happen?
+
+--- SQL Execution ---
+DELETE FROM EMPLOYEE WHERE ssn = 101;
+
+--- Result / Output / Error ---
+Error Code: 1451. Cannot delete or update a parent row: a foreign key constraint fails (`company`.`department`, CONSTRAINT `department_ibfk_1` FOREIGN KEY (`mgr_ssn`) REFERENCES `employee` (`ssn`))
+
+--- Explanation ---
+MySQL rejects deleting the referenced row (the employee) because it violates referential integrity. A foreign key constraint prevents removing a parent row while child records (DEPARTMENT referencing mgr_ssn) still point to it.
+
+
+==================================================
+Q1.2 Insert a row in the PROJECT table that references a row in the DEPARTMENT table that doesn't exist yet. What will happen?
+
+--- SQL Execution ---
+INSERT INTO PROJECT (Pnumber, Pname, Plocation, Dno) 
+VALUES (40, 'Mobile App', 'Alexandria', 99);
+
+--- Result / Output / Error ---
+Error Code: 1452. Cannot add or update a child row: a foreign key constraint fails (`company`.`project`, CONSTRAINT `project_ibfk_1` FOREIGN KEY (`Dno`) REFERENCES `department` (`Dnumber`))
+
+--- Explanation ---
+MySQL rejects inserting the child row into the PROJECT table because Dno = 99 does not exist in the referenced parent table (DEPARTMENT). This maintains referential integrity.
+
+
+==================================================
+Q1.3 If mgr_ssn and Dno are both NOT NULL, how will you insert the first row in EMPLOYEE or DEPARTMENT?
+
+--- Explanation & Solution ---
+If both foreign key columns (mgr_ssn in DEPARTMENT and Dno in EMPLOYEE) are set to NOT NULL, a circular dependency occurs where neither table can accept its first row without the other existing first.
+
+To insert the first row, we can use one of the following methods:
+
+Method 1: Temporarily disable Foreign Key checks:
+SET FOREIGN_KEY_CHECKS = 0;
+INSERT INTO DEPARTMENT (Dnumber, Dname, mgr_ssn, mgr_start_date) VALUES (1, 'Software', 101, '2023-01-01');
+INSERT INTO EMPLOYEE (ssn, fname, lname, bdate, address, gender, salary, Dno) VALUES (101, 'Hamdy', 'Mabrouk', '2002-05-15', 'Alexandria', 'M', 15000.00, 1);
+SET FOREIGN_KEY_CHECKS = 1;
+
+Method 2: Create tables without foreign keys initially, insert data, and then add foreign keys using ALTER TABLE.
